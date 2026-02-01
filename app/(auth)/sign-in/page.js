@@ -1,45 +1,49 @@
 'use client';
 
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import InputField from '@/components/forms/InputField';
 import FooterLink from '@/components/forms/FooterLink';
-import { authClient } from '@/lib/auth-client';
+import { signInWithEmail } from '@/lib/actions/auth.actions';
 
 export default function SignIn() {
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm({
     defaultValues: {
       email: '',
       password: '',
     },
-    mode: 'onBlur',
   });
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (formData) => {
+    setIsLoading(true);
+    
+    console.log('Sign in form data:', formData);
+    
     try {
-      const result = await authClient.signIn.email({
-        email: data.email,
-        password: data.password,
-      });
-
-      if (result.error) {
-        throw new Error(result.error.message);
+      const result = await signInWithEmail(formData);
+      
+      if (result.success) {
+        toast.success('Signed in successfully!');
+        router.push('/');
+        router.refresh();
       }
-
-      toast.success('Signed in successfully!');
-      router.push('/');
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error('Submit error:', error);
       toast.error('Sign in failed', {
-        description: e instanceof Error ? e.message : 'Failed to sign in.',
+        description: error.message || 'Invalid email or password',
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -51,6 +55,7 @@ export default function SignIn() {
           name="email"
           label="Email"
           placeholder="contact@jsmastery.com"
+          type="email"
           register={register}
           error={errors.email}
           validation={{
@@ -61,6 +66,7 @@ export default function SignIn() {
             },
           }}
         />
+        
         <InputField
           name="password"
           label="Password"
@@ -76,13 +82,15 @@ export default function SignIn() {
             },
           }}
         />
+        
         <Button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isLoading}
           className="yellow-btn w-full mt-5"
         >
-          {isSubmitting ? 'Signing In...' : 'Sign In'}
+          {isLoading ? 'Signing In...' : 'Sign In'}
         </Button>
+        
         <FooterLink
           text="Don't have an account?"
           linkText="Create an account"

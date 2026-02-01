@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -17,11 +18,13 @@ import {
 
 export default function SignUp() {
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  
   const {
     register,
     control,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm({
     defaultValues: {
       fullName: '',
@@ -32,21 +35,29 @@ export default function SignUp() {
       riskTolerance: '',
       preferredIndustry: '',
     },
-    mode: 'onBlur',
   });
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (formData) => {
+    setIsLoading(true);
+    
+    console.log('Form data being submitted:', formData);
+    
     try {
-      const result = await signUpWithEmail(data);
+      const result = await signUpWithEmail(formData);
+      
       if (result.success) {
         toast.success('Account created successfully!');
-        router.push('/');
+        setTimeout(() => {
+          router.push('/sign-in');
+        }, 1000);
       }
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error('Submit error:', error);
       toast.error('Sign up failed', {
-        description: e instanceof Error ? e.message : 'Failed to create account.',
+        description: error.message || 'Failed to create account',
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -135,10 +146,10 @@ export default function SignUp() {
 
         <Button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isLoading}
           className="yellow-btn w-full mt-5"
         >
-          {isSubmitting ? 'Creating Account...' : 'Create Account'}
+          {isLoading ? 'Creating Account...' : 'Create Account'}
         </Button>
 
         <FooterLink
