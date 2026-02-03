@@ -1,10 +1,14 @@
-import Header from '@/components/Header';
+import { auth } from '@/lib/auth-client'
 
 export default function RootLayout({ children }) {
+  const session = auth.useSession()
   return (
-    <>
-      <Header />
-      <main className="min-h-screen bg-gray-900 pt-[70px]">{children}</main>
-    </>
-  );
+    <html>
+      <body>
+        <Header />
+        {children}
+        <Toaster />
+      </body>
+    </html>
+  )
 }
