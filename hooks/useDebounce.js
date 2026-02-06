@@ -1,19 +1,19 @@
+'use client';
+
 import { useEffect, useState } from 'react';
 
-export function useDebounce(callback, delay) {
-  const [timeoutId, setTimeoutId] = useState(null);
+export function useDebounce(value, delay = 500) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
 
   useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
     return () => {
-      if (timeoutId) clearTimeout(timeoutId);
+      clearTimeout(handler);
     };
-  }, [timeoutId]);
+  }, [value, delay]);
 
-  const debouncedCallback = () => {
-    if (timeoutId) clearTimeout(timeoutId);
-    const id = setTimeout(callback, delay);
-    setTimeoutId(id);
-  };
-
-  return debouncedCallback;
+  return debouncedValue;
 }

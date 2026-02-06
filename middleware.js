@@ -1,24 +1,38 @@
-import { betterFetch } from "@better-fetch/fetch";
 import { NextResponse } from "next/server";
 
 export default async function authMiddleware(request) {
-  const { data: session } = await betterFetch("/api/auth/get-session", {
-    baseURL: request.nextUrl.origin,
-    headers: {
-      cookie: request.headers.get("cookie") || "",
-    },
+  const pathname = request.nextUrl.pathname;
+
+  // Allow public paths
+  const publicPaths = ['/sign-in', '/sign-up'];
+  const isPublicPath = publicPaths.some(path => pathname.startsWith(path));
+
+  // Always allow API and static files
+  if (pathname.startsWith('/api/') || 
+      pathname.startsWith('/_next/') || 
+      pathname.startsWith('/assets/')) {
+    return NextResponse.next();
+  }
+
+  // Check for session cookie
+  const sessionToken = request.cookies.get('better-auth.session_token');
+  const hasSession = !!sessionToken;
+
+  console.log('🔒 Middleware:', { 
+    pathname, 
+    hasSession,
+    cookie: sessionToken?.value?.substring(0, 10) + '...'
   });
 
-  const isAuthPage = request.nextUrl.pathname.startsWith('/sign-in') || 
-                     request.nextUrl.pathname.startsWith('/sign-up');
-
-  // If user is logged in and tries to access auth pages, redirect to dashboard
-  if (session && isAuthPage) {
+  // Redirect logged-in users away from auth pages
+  if (hasSession && isPublicPath) {
+    console.log('✅ Logged in, redirecting to /');
     return NextResponse.redirect(new URL("/", request.url));
   }
 
-  // If user is not logged in and tries to access protected routes, redirect to sign-in
-  if (!session && !isAuthPage) {
+  // Redirect non-logged-in users to sign-in
+  if (!hasSession && !isPublicPath) {
+    console.log('❌ No session, redirecting to /sign-in');
     return NextResponse.redirect(new URL("/sign-in", request.url));
   }
 
@@ -27,6 +41,6 @@ export default async function authMiddleware(request) {
 
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|assets).*)',
+    '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 };

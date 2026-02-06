@@ -1,32 +1,34 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import { cn } from '@/lib/utils';
+import { useEffect, useRef, memo } from 'react';
 
-export default function TradingViewWidget({ scriptUrl, config, className, height = 400 }) {
-  const containerRef = useRef(null);
+function TradingViewWidget({ config }) {
+  const container = useRef();
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (!container.current) return;
 
     const script = document.createElement('script');
-    script.src = scriptUrl;
+    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
+    script.type = 'text/javascript';
     script.async = true;
     script.innerHTML = JSON.stringify(config);
 
-    containerRef.current.innerHTML = '';
-    containerRef.current.appendChild(script);
+    container.current.innerHTML = '';
+    container.current.appendChild(script);
 
     return () => {
-      if (containerRef.current) {
-        containerRef.current.innerHTML = '';
+      if (container.current) {
+        container.current.innerHTML = '';
       }
     };
-  }, [scriptUrl, config]);
+  }, [config]);
 
   return (
-    <div className={cn('tradingview-widget-container', className)} style={{ height }}>
-      <div ref={containerRef} className="tradingview-widget-container__widget" />
+    <div className="tradingview-widget-container h-full" ref={container}>
+      <div className="tradingview-widget-container__widget h-full"></div>
     </div>
   );
 }
+
+export default memo(TradingViewWidget);

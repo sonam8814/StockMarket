@@ -1,113 +1,115 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   CommandDialog,
   CommandEmpty,
+  CommandGroup,
   CommandInput,
+  CommandItem,
   CommandList,
 } from '@/components/ui/command';
-import { Button } from '@/components/ui/button';
-import { Loader2, TrendingUp } from 'lucide-react';
-import Link from 'next/link';
 import { searchStocks } from '@/lib/actions/finnhub.actions';
 import { useDebounce } from '@/hooks/useDebounce';
+import { Search } from 'lucide-react';
 
-export default function SearchCommand({ renderAs = 'button', label = 'Add stock', initialStocks }) {
+export default function SearchCommand() {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [stocks, setStocks] = useState(initialStocks || []);
-  const isSearchMode = !!searchTerm.trim();
-  const displayStocks = isSearchMode ? stocks : stocks?.slice(0, 10);
+  const debouncedQuery = useDebounce(query, 300);
 
   useEffect(() => {
-    const onKeyDown = (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+    const down = (e) => {
+      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
-        setOpen((v) => !v);
+        setOpen((open) => !open);
       }
     };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
+
+    document.addEventListener('keydown', down);
+    return () => document.removeEventListener('keydown', down);
   }, []);
 
-  const handleSearch = async () => {
-    if (!isSearchMode) return setStocks(initialStocks || []);
-    setLoading(true);
-    try {
-      const results = await searchStocks(searchTerm.trim());
-      setStocks(results);
-    } catch {
-      setStocks([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const debouncedSearch = useDebounce(handleSearch, 300);
-
   useEffect(() => {
-    debouncedSearch();
-  }, [searchTerm]);
+    const searchSymbols = async () => {
+      if (!debouncedQuery || debouncedQuery.length < 1) {
+        setResults([]);
+        return;
+      }
 
-  const handleSelectStock = () => {
+      setLoading(true);
+      try {
+        const data = await searchStocks(debouncedQuery);
+        setResults(data?.result || []);
+      } catch (error) {
+        console.error('Search error:', error);
+        setResults([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    searchSymbols();
+  }, [debouncedQuery]);
+
+  const handleSelect = (symbol) => {
     setOpen(false);
-    setSearchTerm('');
-    setStocks(initialStocks || []);
+    setQuery('');
+    setResults([]);
+    router.push(`/stocks/${symbol}`);
   };
 
   return (
     <>
-      {renderAs === 'text' ? (
-        <span onClick={() => setOpen(true)} className="search-text">
-          {label}
-        </span>
-      ) : (
-        <Button onClick={() => setOpen(true)} className="search-btn">
-          {label}
-        </Button>
-      )}
-      <CommandDialog open={open} onOpenChange={setOpen} className="search-dialog">
-        <div className="search-field">
-          <CommandInput
-            value={searchTerm}
-            onValueChange={setSearchTerm}
-            placeholder="Search stocks..."
-            className="search-input"
-          />
-          {loading && <Loader2 className="search-loader" />}
-        </div>
-        <CommandList className="search-list">
-          {loading ? (
-            <CommandEmpty className="search-list-empty">Loading stocks...</CommandEmpty>
-          ) : displayStocks?.length === 0 ? (
-            <div className="search-list-indicator">
-              {isSearchMode ? 'No results found' : 'No stocks available'}
+      <button
+        onClick={() => setOpen(true)}
+        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+      >
+        <Search className="w-4 h-4" />
+        <span className="hidden sm:inline">Search stocks...</span>
+        <kbd className="ml-auto px-2 py-0.5 text-xs bg-white rounded border hidden sm:inline">
+          ⌘K
+        </kbd>
+      </button>
+
+      <CommandDialog open={open} onOpenChange={setOpen}>
+        <CommandInput
+          placeholder="Search for stocks (e.g., AAPL, TSLA)..."
+          value={query}
+          onValueChange={setQuery}
+        />
+        <CommandList>
+          {loading && (
+            <div className="py-6 text-center text-sm text-gray-500">
+              Searching...
             </div>
-          ) : (
-            <ul>
-              <div className="search-count">
-                {isSearchMode ? 'Search results' : 'Popular stocks'} ({displayStocks?.length || 0})
-              </div>
-              {displayStocks?.map((stock) => (
-                <li key={stock.symbol} className="search-item">
-                  <Link
-                    href={`/stocks/${stock.symbol}`}
-                    onClick={handleSelectStock}
-                    className="search-item-link"
-                  >
-                    <TrendingUp className="h-4 w-4 text-gray-500" />
-                    <div className="flex-1">
-                      <div className="search-item-name">{stock.name}</div>
-                      <div className="text-sm text-gray-500">
-                        {stock.symbol} | {stock.exchange} | {stock.type}
-                      </div>
+          )}
+          {!loading && query && results.length === 0 && (
+            <CommandEmpty>No stocks found.</CommandEmpty>
+          )}
+          {!loading && results.length > 0 && (
+            <CommandGroup heading="Stocks">
+              {results.slice(0, 10).map((stock) => (
+                <CommandItem
+                  key={stock.symbol}
+                  value={stock.symbol}
+                  onSelect={() => handleSelect(stock.symbol)}
+                  className="cursor-pointer"
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <div>
+                      <p className="font-medium">{stock.symbol}</p>
+                      <p className="text-sm text-gray-500">{stock.description}</p>
                     </div>
-                  </Link>
-                </li>
+                    <span className="text-xs text-gray-400">{stock.type}</span>
+                  </div>
+                </CommandItem>
               ))}
-            </ul>
+            </CommandGroup>
           )}
         </CommandList>
       </CommandDialog>
