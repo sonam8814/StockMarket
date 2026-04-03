@@ -22,7 +22,7 @@ export default function SignInPage() {
 
   const onSubmit = async (data) => {
     setIsLoading(true);
-    
+
     try {
       const result = await authClient.signIn.email({
         email: data.email,
@@ -40,7 +40,7 @@ export default function SignInPage() {
           },
         },
       });
-      
+
     } catch (error) {
       console.error('Sign in error:', error);
       toast.error('Something went wrong');
@@ -49,68 +49,71 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="text-center text-3xl font-bold text-gray-900">
-            Welcome back
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Sign in to access your account
-          </p>
+    <div className="space-y-6">
+      {/* Logo */}
+      <div className="text-yellow-400 text-3xl font-bold">Signalist</div>
+
+      {/* Header */}
+      <div>
+        <h2 className="text-3xl font-bold text-white">Welcome back</h2>
+        <p className="mt-2 text-sm text-gray-400">
+          Sign in to access your account
+        </p>
+      </div>
+
+      {/* Form */}
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="email" className="text-gray-300">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="john@example.com"
+            disabled={isLoading}
+            autoComplete="email"
+            {...register('email', {
+              required: 'Email is required',
+            })}
+            className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-yellow-500"
+          />
+          {errors.email && (
+            <p className="text-sm text-red-500">{errors.email.message}</p>
+          )}
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-6">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="john@example.com"
-                disabled={isLoading}
-                autoComplete="email"
-                {...register('email', {
-                  required: 'Email is required',
-                })}
-                className={errors.email ? 'border-red-500' : ''}
-              />
-              {errors.email && (
-                <p className="text-sm text-red-500">{errors.email.message}</p>
-              )}
-            </div>
+        <div className="space-y-2">
+          <Label htmlFor="password" className="text-gray-300">Password</Label>
+          <Input
+            id="password"
+            type="password"
+            placeholder="••••••••"
+            disabled={isLoading}
+            autoComplete="current-password"
+            {...register('password', {
+              required: 'Password is required',
+            })}
+            className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-yellow-500"
+          />
+          {errors.password && (
+            <p className="text-sm text-red-500">{errors.password.message}</p>
+          )}
+        </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                disabled={isLoading}
-                autoComplete="current-password"
-                {...register('password', {
-                  required: 'Password is required',
-                })}
-                className={errors.password ? 'border-red-500' : ''}
-              />
-              {errors.password && (
-                <p className="text-sm text-red-500">{errors.password.message}</p>
-              )}
-            </div>
-          </div>
+        <Button
+          type="submit"
+          disabled={isLoading}
+          className="w-full bg-yellow-400 text-black hover:bg-yellow-500 font-semibold py-6"
+        >
+          {isLoading ? 'Signing in...' : 'Sign In'}
+        </Button>
 
-          <Button type="submit" disabled={isLoading} className="w-full">
-            {isLoading ? 'Signing in...' : 'Sign In'}
-          </Button>
-
-          <p className="text-center text-sm text-gray-600">
-            Don't have an account?{' '}
-            <Link href="/sign-up" className="font-medium text-blue-600 hover:text-blue-500">
-              Create an account
-            </Link>
-          </p>
-        </form>
-      </div>
+        <p className="text-center text-sm text-gray-400">
+          Don't have an account?{' '}
+          <Link href="/sign-up" className="font-medium text-yellow-400 hover:text-yellow-500">
+            Create an account
+          </Link>
+        </p>
+      </form>
     </div>
   );
 }

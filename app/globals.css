@@ -139,8 +139,11 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    @apply dark;
+  }
   body {
-    @apply bg-gray-900 text-foreground;
+    @apply bg-gray-900 text-gray-100 antialiased;
   }
 }
 
@@ -158,10 +161,10 @@
     @apply w-full gap-8 grid-cols-1 md:grid-cols-2 xl:grid-cols-3;
   }
   .header {
-    @apply z-50 w-full h-[70px] bg-gray-800;
+    @apply z-50 w-full h-[70px] bg-gray-800 border-b border-gray-700;
   }
   .header-wrapper {
-    @apply flex justify-between items-center px-6 py-4 text-gray-500;
+    @apply flex justify-between items-center px-6 py-4 text-gray-300;
   }
   .auth-layout {
     @apply flex flex-col justify-between lg:flex-row h-screen bg-gray-900 relative overflow-hidden;
@@ -176,19 +179,19 @@
     @apply w-full max-lg:border-t max-lg:border-gray-600 lg:w-[55%] lg:h-screen bg-gray-800 px-6 py-4 md:p-6 lg:py-12 lg:px-18 flex flex-col justify-start;
   }
   .auth-blockquote {
-    @apply text-sm md:text-xl lg:text-2xl font-medium text-gray-400 mb-1 md:mb-6 lg:mb-8;
+    @apply text-sm md:text-xl lg:text-2xl font-medium text-gray-300 mb-1 md:mb-6 lg:mb-8;
   }
   .auth-testimonial-author {
-    @apply text-xs md:text-lg font-bold text-gray-400 not-italic;
+    @apply text-xs md:text-lg font-bold text-yellow-400 not-italic;
   }
   .auth-dashboard-preview {
     @apply border-6 border-gray-800 left-0 hidden w-[1024px] h-auto max-w-none lg:block rounded-xl shadow-2xl;
   }
   .form-title {
-    @apply text-4xl font-bold text-gray-400 mb-10;
+    @apply text-4xl font-bold text-white mb-10;
   }
   .form-label {
-    @apply text-sm font-medium text-gray-400;
+    @apply text-sm font-medium text-gray-300;
   }
   .form-input {
     @apply h-12 px-3 py-3 text-white text-base placeholder:text-gray-500 border-gray-600 bg-gray-800 rounded-lg focus:!border-yellow-500 focus:ring-0;
