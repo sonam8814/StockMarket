@@ -28,28 +28,17 @@ export default function WatchlistTable({ stocks, userEmail }) {
     // Fetch real-time data for all stocks
     const fetchStockData = async () => {
       setLoading(true);
-      
-      try {
-        const dataPromises = stocks.map(async (stock) => {
-          // You can use Finnhub API here to get real-time quotes
-          // For now, returning mock data structure
-          return {
-            symbol: stock.symbol,
-            price: 0,
-            change: 0,
-            changePercent: 0,
-            marketCap: 0,
-            peRatio: 0,
-          };
-        });
 
-        const results = await Promise.all(dataPromises);
-        
+      try {
+        const symbols = stocks.map((stock) => stock.symbol).join(",");
+        const response = await fetch(`/api/quotes?symbols=${symbols}`);
+        const results = await response.json();
+
         const dataMap = {};
         results.forEach((data) => {
           dataMap[data.symbol] = data;
         });
-        
+
         setStockData(dataMap);
       } catch (error) {
         console.error("Error fetching stock data:", error);
@@ -87,8 +76,8 @@ export default function WatchlistTable({ stocks, userEmail }) {
             <TableHead className="text-gray-400 text-right">Price</TableHead>
             <TableHead className="text-gray-400 text-right">Change</TableHead>
             <TableHead className="text-gray-400 text-right">Change %</TableHead>
-            <TableHead className="text-gray-400 text-right">Market Cap</TableHead>
-            <TableHead className="text-gray-400 text-right">P/E Ratio</TableHead>
+            <TableHead className="text-gray-400 text-right">High</TableHead>
+            <TableHead className="text-gray-400 text-right">Low</TableHead>
             <TableHead className="text-gray-400 text-center">Alert</TableHead>
             <TableHead className="text-gray-400 text-center">Action</TableHead>
           </TableRow>
@@ -108,9 +97,9 @@ export default function WatchlistTable({ stocks, userEmail }) {
                     {stock.symbol}
                   </Link>
                 </TableCell>
-                <TableCell>{stock.name}</TableCell>
+                <TableCell>{stock.company || stock.name}</TableCell>
                 <TableCell className="text-right">
-                  ${data.price?.toFixed(2) || "—"}
+                  {data.currentPrice ? `$${data.currentPrice.toFixed(2)}` : "—"}
                 </TableCell>
                 <TableCell
                   className={`text-right ${
@@ -129,12 +118,10 @@ export default function WatchlistTable({ stocks, userEmail }) {
                   {data.changePercent?.toFixed(2) || "—"}%
                 </TableCell>
                 <TableCell className="text-right">
-                  {data.marketCap
-                    ? `$${(data.marketCap / 1e9).toFixed(2)}B`
-                    : "—"}
+                  {data.high ? `$${data.high.toFixed(2)}` : "—"}
                 </TableCell>
                 <TableCell className="text-right">
-                  {data.peRatio?.toFixed(2) || "—"}
+                  {data.low ? `$${data.low.toFixed(2)}` : "—"}
                 </TableCell>
                 <TableCell className="text-center">
                   <button className="text-gray-500 hover:text-yellow-400 transition-colors">
@@ -144,7 +131,7 @@ export default function WatchlistTable({ stocks, userEmail }) {
                 <TableCell className="text-center">
                   <WatchlistButton
                     symbol={stock.symbol}
-                    name={stock.name}
+                    name={stock.company || stock.name}
                     userEmail={userEmail}
                     type="icon"
                     showTrash
